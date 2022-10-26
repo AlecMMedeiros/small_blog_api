@@ -22,7 +22,7 @@ const validateToken = (token) => {
   }
 };
 
-const decoded = (token) =>{
+const decoded = (token) => {
   const data = jwt.verify(token, process.env.JWT_SECRET);
   return data;
 };
