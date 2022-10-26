@@ -3,16 +3,23 @@ const postService = require('../services/post.service');
 const register = async (req, res) => {
   const { authorization } = req.headers;
   const validate = postService.validateBody(req.body);
-
   if (validate) return res.status(validate.code).json({ message: validate.message });
-
   const newCategory = await postService.newPost(authorization, req.body);
-  console.log(newCategory);
-
   return newCategory === true ? res.status(400).json({
     message: 'one or more "categoryIds" not found',
   })
     : res.status(201).json(newCategory);
+};
+
+const updatePost = async (req, res) => {
+  const { authorization } = req.headers;
+  const { id } = req.params;
+  const validate = postService.validateBodyUpdate(req.body);
+  if (validate) return res.status(validate.code).json({ message: validate.message });
+  const runUpdate = await postService.updatePost(authorization, id, req.body);
+
+  return runUpdate.code === 200 ? res.status(runUpdate.code).json(runUpdate.message)
+  : res.status(runUpdate.code).json({ message: runUpdate.message });
 };
 
 const getAllposts = async (req, res) => {
@@ -28,4 +35,4 @@ const getPostById = async (req, res) => {
     message: 'Post does not exist',
   }) : res.status(200).json(post);
 };
-module.exports = { getAllposts, getPostById, register };
+module.exports = { getAllposts, getPostById, register, updatePost };
