@@ -48,4 +48,11 @@ const getPostById = async (req, res) => {
     message: 'Post does not exist',
   }) : res.status(200).json(post);
 };
-module.exports = { getAllposts, getPostById, register, updatePost, deletePost };
+
+const searchPost = async (req, res) => {
+  const { q } = req.query;
+  const result = await postService.search(q);
+
+  return res.status(200).json(result);
+};
+module.exports = { getAllposts, getPostById, register, updatePost, deletePost, searchPost };

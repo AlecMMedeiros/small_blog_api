@@ -1,4 +1,5 @@
 const Joi = require('joi');
+const { Op } = require('sequelize');
 const JWT = require('../utils/jwt.util');
 
 const { BlogPost, User, Category, PostCategory } = require('../models');
@@ -113,6 +114,27 @@ const remove = async (id, token) => {
   return { code: 401, message: 'Unauthorized user' };
 };
 
+const search = async (payload) => {
+  const result = await BlogPost.findAll({
+    where: {
+      [Op.or]: [
+        { title: { [Op.like]: `%${payload}%` } },
+        { content: { [Op.like]: `%${payload}%` } },
+      ],
+    },
+    include: [
+      { model: User, as: 'user', attributes: { exclude: ['password'] } },
+      { model: Category,
+        as: 'categories',
+        attributes: ['id', 'name'],
+        through: { attributes: [] },
+      },
+    ],
+  });
+  console.log(result);
+  return result;
+};
+
 module.exports = {
   getAllposts,
   getPostById,
@@ -121,4 +143,5 @@ module.exports = {
   updatePost,
   validateBodyUpdate,
   remove,
+  search,
 };
