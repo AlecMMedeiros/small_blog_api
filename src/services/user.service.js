@@ -10,6 +10,8 @@ const createUser = async (params) => {
 
 const getAllUsers = async () => User.findAll({ attributes: { exclude: ['password'] } });
 
+const getUserById = async (id) => User.findByPk(id, { attributes: { exclude: ['password'] } });
+
 const validateBody = (params) => {
   const schema = Joi.object({
     displayName: Joi.string().min(8).required().messages({
@@ -46,4 +48,4 @@ const validateNewUSer = async (params) => {
   return token;
 };
 
-module.exports = { validateBody, validateNewUSer, createUser, getAllUsers };
+module.exports = { validateBody, validateNewUSer, createUser, getAllUsers, getUserById };
