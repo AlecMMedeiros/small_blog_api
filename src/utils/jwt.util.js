@@ -22,4 +22,9 @@ const validateToken = (token) => {
   }
 };
 
-module.exports = { createToken, validateToken };
+const decoded = (token) =>{
+  const data = jwt.verify(token, process.env.JWT_SECRET);
+  return data;
+};
+
+module.exports = { createToken, validateToken, decoded };
