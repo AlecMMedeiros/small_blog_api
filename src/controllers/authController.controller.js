@@ -12,4 +12,12 @@ const login = async (req, res) => {
    : res.status(200).json({ token });  
 };
 
-module.exports = { login };
+const validateAcess = async (req, res, next) => {
+  const { authorization } = req.headers;
+  const result = await authService.validateToken(authorization);
+  if (result.code) return res.status(result.code).json({ message: result.message }); 
+
+  next();
+};
+
+module.exports = { login, validateAcess };

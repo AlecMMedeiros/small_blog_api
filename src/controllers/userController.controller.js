@@ -15,4 +15,10 @@ const register = async (req, res) => {
   return res.status(token.code).json({ message: token.message });
 };
 
-module.exports = { register };
+const getAllUsers = async (req, res) => {
+  const users = await userService.getAllUsers();
+
+  return res.status(200).json(users);
+};
+
+module.exports = { register, getAllUsers };
