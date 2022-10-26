@@ -2,9 +2,7 @@ const Joi = require('joi');
 
 const { Category } = require('../models');
 
-const findByName = async (teste) => Category.findAll({
-  where: { name: teste },
-});
+const getAllCategories = async () => Category.findAll();
 
 const createCategory = async (params) => { 
   const { name } = params;
@@ -29,4 +27,4 @@ const validateBody = (params) => {
   return null;
 };
 
-module.exports = { validateBody, createCategory, findByName };
+module.exports = { validateBody, createCategory, getAllCategories };
