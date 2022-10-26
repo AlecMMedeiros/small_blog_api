@@ -103,6 +103,16 @@ const validateBodyUpdate = (payload) => {
   return null;
 };
 
+const remove = async (id, token) => {
+  const user = JWT.decoded(token);
+  const postBaseData = await BlogPost.findByPk(id); 
+  if (user.data.id === postBaseData.dataValues.userId) {
+    await BlogPost.destroy({ where: { id } });
+    return { code: 204 };
+  }
+  return { code: 401, message: 'Unauthorized user' };
+};
+
 module.exports = {
   getAllposts,
   getPostById,
@@ -110,4 +120,5 @@ module.exports = {
   validateBody,
   updatePost,
   validateBodyUpdate,
+  remove,
 };

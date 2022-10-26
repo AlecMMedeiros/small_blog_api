@@ -33,19 +33,25 @@ const validateBody = (params) => {
   return null;
 };
 
-const validateNewUSer = async (params) => {
-  const { email } = params;
+const validateNewUSer = async (payload) => {
+  const { email } = payload;
   const user = await User.findOne({ where: { email } });
 
   if (user) {
     return { code: 409, message: 'User already registered' };
   }
 
-  const { password: _, ...userWithoutPassword } = params;
+  const { password: _, ...userWithoutPassword } = payload;
 
   const token = jwtUtil.createToken(userWithoutPassword);
 
   return token;
 };
 
-module.exports = { validateBody, validateNewUSer, createUser, getAllUsers, getUserById };
+const removeMe = async (token) => {
+  const { data: { id } } = jwtUtil.decoded(token);
+  await User.destroy({ where: { id } });
+  return { code: 204 };
+};
+
+module.exports = { validateBody, validateNewUSer, createUser, getAllUsers, getUserById, removeMe };

@@ -30,4 +30,10 @@ const getUserById = async (req, res) => {
   }) : res.status(200).json(user); 
 };
 
-module.exports = { register, getAllUsers, getUserById };
+const removeMe = async (req, res) => {
+  const { authorization } = req.headers;
+  const remove = await userService.removeMe(authorization);
+  return res.status(remove.code).json();
+};
+
+module.exports = { register, getAllUsers, getUserById, removeMe };

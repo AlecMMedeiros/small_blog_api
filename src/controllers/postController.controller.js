@@ -22,6 +22,19 @@ const updatePost = async (req, res) => {
   : res.status(runUpdate.code).json({ message: runUpdate.message });
 };
 
+const deletePost = async (req, res) => {
+  const { authorization } = req.headers;
+  const { id } = req.params;
+  const postExists = await postService.getPostById(id);
+  if (postExists === null) {
+    return res.status(404).json({ message: 'Post does not exist' });
+  }
+  const removePost = await postService.remove(id, authorization);
+
+  return removePost.code === 204 ? res.status(removePost.code).json()
+  : res.status(removePost.code).json({ message: removePost.message });
+};
+
 const getAllposts = async (req, res) => {
   const result = await postService.getAllposts();
   return res.status(200).json(result);
@@ -35,4 +48,4 @@ const getPostById = async (req, res) => {
     message: 'Post does not exist',
   }) : res.status(200).json(post);
 };
-module.exports = { getAllposts, getPostById, register, updatePost };
+module.exports = { getAllposts, getPostById, register, updatePost, deletePost };
