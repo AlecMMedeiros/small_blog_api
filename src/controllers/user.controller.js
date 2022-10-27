@@ -9,7 +9,7 @@ const newUser = await userService.createUser(req.body);
 const getAllUsers = async (req, res) => {
   const users = await userService.getAllUsers();
 
-  return res.status(users.code).json(users.object);
+  return res.status(users.code).json(users.object || { message: users.message });
 };
 
 const getUserById = async (req, res) => {
@@ -22,7 +22,7 @@ const getUserById = async (req, res) => {
 const removeMe = async (req, res) => {
   const { authorization } = req.headers;
   const remove = await userService.removeMe(authorization);
-  return res.status(remove.code).json();
+  return res.status(remove.code).json(remove.object || { message: remove.message });
 };
 
 module.exports = { register, getAllUsers, getUserById, removeMe };

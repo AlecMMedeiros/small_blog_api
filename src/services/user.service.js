@@ -23,17 +23,25 @@ const createUser = async (payload) => {
 };
 
 const getAllUsers = async () => {
-  const fetchUsers = await User.findAll({ attributes: { exclude: ['password'] } });
-
-  return { code: 200, object: fetchUsers };
+  try {
+    const fetchUsers = await User.findAll({ attributes: { exclude: ['password'] } });
+  
+    return { code: 200, object: fetchUsers };    
+  } catch (error) {
+    return userError.type04;
+  }
 }; 
 
 const getUserById = async (id) => {
-  const fetchUser = await User.findByPk(id, { attributes: { exclude: ['password'] } });
-
-  if (fetchUser === null) return userError.type01;
-
-  return { code: 200, object: fetchUser };
+  try {
+    const fetchUser = await User.findByPk(id, { attributes: { exclude: ['password'] } });
+  
+    if (fetchUser === null) return userError.type01;
+  
+    return { code: 200, object: fetchUser };    
+  } catch (error) {
+    return userError.type04;
+  }
 };
 
 const removeMe = async (token) => {
@@ -42,7 +50,7 @@ const removeMe = async (token) => {
     const { data: { id } } = jwtUtil.decoded(token);
     await User.destroy({ where: { id } });
     await transaction.commit();
-    return { code: 204 };    
+    return { code: 204, object: '' };    
   } catch (error) {
     await transaction.rollback();
     return userError.type04;
