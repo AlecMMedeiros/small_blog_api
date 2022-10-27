@@ -1,117 +1,108 @@
-const Joi = require('joi');
 const { Op } = require('sequelize');
 const JWT = require('../utils/jwt.util');
+const { postError } = require('../utils/errorMap.utils');
 
-const { BlogPost, User, Category, PostCategory } = require('../models');
+const { BlogPost, User, Category, PostCategory, sequelize } = require('../models');
 
-const errorMessage = 'Some required fields are missing';
-
-const getAllposts = async () => BlogPost.findAll({
-  include: [
-    { model: User, as: 'user', attributes: { exclude: ['password'] } },
-    {
-      model: Category,
-      as: 'categories',
-      attributes: ['id', 'name'],
-      through: { attributes: [] },
-    },
-  ],
-});
-
-const getPostById = async (id) => BlogPost.findByPk(
-  id, {
-  include: [
-    { model: User, as: 'user', attributes: { exclude: ['password'] } },
-    {
-      model: Category,
-      as: 'categories',
-      attributes: ['id', 'name'],
-      through: { attributes: [] },
-    },
-  ],
-},
-);
-
-const validateCategory = async (id) => {
-  const validate = Category.findByPk(id);
-  return validate;
+const getAllposts = async () => {
+  const fetchPosts = await BlogPost.findAll({
+    include: [
+      { model: User, as: 'user', attributes: { exclude: ['password'] } },
+      {
+        model: Category,
+        as: 'categories',
+        attributes: ['id', 'name'],
+        through: { attributes: [] },
+      },
+    ],
+  });
+  return { code: 200, object: fetchPosts };
 };
 
-const updatePost = async (toke, id, payload) => {
+const getPostById = async (id) => {
+  const fetchData = await BlogPost.findByPk(
+    id, {
+    include: [
+      { model: User, as: 'user', attributes: { exclude: ['password'] } },
+      {
+        model: Category,
+        as: 'categories',
+        attributes: ['id', 'name'],
+        through: { attributes: [] },
+      },
+    ] },
+  );
+  return fetchData === null
+    ? postError.type01
+    : { code: 200, object: fetchData };
+};
+
+const updatePost = async (token, postId, payload) => {
   const { title, content } = payload;
-  const user = JWT.decoded(toke);
-  const postBaseData = await BlogPost.findByPk(id); 
-  if (user.data.id === postBaseData.dataValues.userId) {
-    await BlogPost.update({ title, content }, {
-      where: { id },
-    });
-    const updatedPost = await getPostById(id);
-    return { code: 200, message: updatedPost };
+
+  const transaction = await sequelize.transaction();
+
+  try {
+    const { data: { id } } = JWT.decoded(token);
+    const { dataValues: { userId } } = await BlogPost.findByPk(postId);
+  
+    if (id === userId) {
+      await BlogPost.update({ title, content }, {
+        where: { id: postId },
+      });
+      const updatedPost = await getPostById(postId);
+    
+      await transaction.commit();
+      return { code: 200, object: updatedPost.object };
+    }
+    return postError.type02;
+  } catch (error) {
+    await transaction.rollback();
+    throw postError.type04;
   }
-  return { code: 401, message: 'Unauthorized user' };
 };
 
-const newPost = async (toke, payload) => {
-  const user = JWT.decoded(toke);
+const newPost = async (token, payload) => {
   const { title, content, categoryIds } = payload;
-  const validateCategories = await Promise.all(categoryIds.map(
-    async (categoryId) => validateCategory(categoryId),
-  ));
-  const getValidateResult = validateCategories.some((ele) => ele === null);
-  if (getValidateResult === false) {
-    const postRegister = await BlogPost.create({ title, content, userId: user.data.id });
+  
+  const { data: { id } } = JWT.decoded(token);
+  
+  const transaction = await sequelize.transaction();
+
+  try {
+    const postRegister = await BlogPost.create({ title, content, userId: id });
     const newPostResume = await BlogPost.findByPk(postRegister.null);
     const getPostId = newPostResume.dataValues.id;
     await Promise.all(categoryIds.map(
       async (categoryId) => PostCategory.create({ postId: getPostId, categoryId }),
     ));
-    return newPostResume;
+    await transaction.commit();
+    return { code: 201, object: newPostResume };
+  } catch (_) {
+    await transaction.rollback();
+    return postError.type03;
   }
-  return true;
 };
 
-const validateBody = (payload) => {
-  const schema = Joi.object({
-    title: Joi.string().required().messages({
-      'any.required': errorMessage,
-      'string.empty': errorMessage,
-    }),
-    content: Joi.string().required().messages({
-      'any.required': errorMessage,
-    }),
-    categoryIds: Joi.array().items(Joi.number().required()
-      .messages({
-        'any.required': 'one or more "categoryIds" not found',
-      })).required().messages({ 'any.required': errorMessage }),
-  });
-  const { error } = schema.validate(payload);
-  if (error) return { code: 400, message: error.details[0].message };
-  return null;
-};
+const remove = async (postId, token) => {
+  const transaction = await sequelize.transaction();
 
-const validateBodyUpdate = (payload) => {
-  const schema = Joi.object({
-    title: Joi.string().required().messages({
-      'any.required': errorMessage,
-      'string.empty': errorMessage,
-    }),
-    content: Joi.string().required().messages({
-      'any.required': errorMessage,
-    }),
-  });
-  const { error } = schema.validate(payload);
-  if (error) return { code: 400, message: error.details[0].message };
-  return null;
-};
+  try {
+    const { data: { id } } = JWT.decoded(token);
+    const { dataValues: { userId } } = await BlogPost.findByPk(postId);
 
-const remove = async (id, token) => {
-  const user = JWT.decoded(token);
-  const postBaseData = await BlogPost.findByPk(id); 
-  if (user.data.id === postBaseData.dataValues.userId) {
-    await BlogPost.destroy({ where: { id } });
-    return { code: 204 };
+    if (id === userId) {
+      await BlogPost.destroy({ where: { id: postId } });
+      await transaction.commit();
+      return { code: 204, object: '' };
+    }
+
+    return postError.type02;
+  } catch (_) {
+    await transaction.rollback();
+
+    return postError.type01;
   }
-  return { code: 401, message: 'Unauthorized user' };
 };
 
 const search = async (payload) => {
@@ -124,14 +115,14 @@ const search = async (payload) => {
     },
     include: [
       { model: User, as: 'user', attributes: { exclude: ['password'] } },
-      { model: Category,
+      {
+        model: Category,
         as: 'categories',
         attributes: ['id', 'name'],
         through: { attributes: [] },
       },
     ],
   });
-  console.log(result);
   return result;
 };
 
@@ -139,9 +130,7 @@ module.exports = {
   getAllposts,
   getPostById,
   newPost,
-  validateBody,
   updatePost,
-  validateBodyUpdate,
   remove,
   search,
 };

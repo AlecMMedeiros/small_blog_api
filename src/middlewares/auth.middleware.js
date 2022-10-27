@@ -1,11 +1,11 @@
 const authService = require('../services/auth.service');
-// Out of use
-const validateToken = async (req, _res, next) => {
+
+const validateAccess = async (req, res, next) => {
     const { authorization } = req.headers;
-    const user = authService.validateToken(authorization);
-    req.user = user;
-
+    const result = await authService.validateToken(authorization);
+    if (result.code) return res.status(result.code).json({ message: result.message }); 
+  
     next();
-};
+  };
 
-module.exports = { validateToken };
+module.exports = { validateAccess };
