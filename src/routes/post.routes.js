@@ -1,17 +1,32 @@
 const express = require('express');
 const { postController } = require('../controllers');
-const { validateAccess } = require('../middlewares/auth.middleware');
-const { newPostBody, updatePostBody } = require('../middlewares/reqBodyValidate.middleware');
+const { reqBodyMiddleware, authMiddleware } = require('../middlewares');
 
 const router = express.Router();
 
-router.get('/search', validateAccess, postController.searchPost);
+router.get('/search',
+    authMiddleware.validateAccess,
+    postController.searchPost);
 
-router.get('/:id', validateAccess, postController.getPostById);
-router.put('/:id', validateAccess, updatePostBody, postController.updatePost);
-router.delete('/:id', validateAccess, postController.deletePost);
+router.get('/:id',
+    authMiddleware.validateAccess,
+    postController.getPostById);
 
-router.get('/', validateAccess, postController.getAllposts);
-router.post('/', validateAccess, newPostBody, postController.register);
+router.put('/:id',
+    authMiddleware.validateAccess,
+    reqBodyMiddleware.updatePostBody,
+    postController.updatePost);
+
+router.delete('/:id',
+    authMiddleware.validateAccess,
+    postController.deletePost);
+
+router.get('/',
+    authMiddleware.validateAccess,
+    postController.getAllposts);
+router.post('/',
+    authMiddleware.validateAccess,
+    reqBodyMiddleware.newPostBody,
+    postController.register);
 
 module.exports = router;

@@ -1,57 +1,52 @@
-const Joi = require('joi');
 const jwtUtil = require('../utils/jwt.util');
+const { User, sequelize } = require('../models');
+const { userError } = require('../utils/errorMap.utils');
 
-const { User } = require('../models');
-
-const createUser = async (params) => {
-  const { displayName, email, password, image } = params;
-  User.create({ displayName, email, password, image });
-};
-
-const getAllUsers = async () => User.findAll({ attributes: { exclude: ['password'] } });
-
-const getUserById = async (id) => User.findByPk(id, { attributes: { exclude: ['password'] } });
-
-const validateBody = (params) => {
-  const schema = Joi.object({
-    displayName: Joi.string().min(8).required().messages({
-      'string.min': '"displayName" length must be at least 8 characters long',
-    }),
-    email: Joi.string().email().required().messages({
-      'string.min': '"email" must be a valid email',
-    }),
-    password: Joi.string().min(6).required().messages({
-      'string.min': '"password" length must be at least 6 characters long',
-    }),
-    image: Joi.string(),
-  });
-
-  const { error } = schema.validate(params);
-
-  if (error) return { code: 400, message: error.details[0].message };
-
-  return null;
-};
-
-const validateNewUSer = async (payload) => {
-  const { email } = payload;
-  const user = await User.findOne({ where: { email } });
-
-  if (user) {
-    return { code: 409, message: 'User already registered' };
-  }
-
+const createUser = async (payload) => {
+  const { displayName, email, password, image } = payload;
   const { password: _, ...userWithoutPassword } = payload;
 
-  const token = jwtUtil.createToken(userWithoutPassword);
+  const transaction = await sequelize.transaction();
 
-  return token;
+  try {
+    const token = jwtUtil.createToken(userWithoutPassword);
+
+    await User.create({ displayName, email, password, image });
+    await transaction.commit(); 
+
+    return { code: 201, object: { token } };
+  } catch (error) {
+    await transaction.rollback();
+
+    throw userError.type04;
+  }
+};
+
+const getAllUsers = async () => {
+  const fetchUsers = await User.findAll({ attributes: { exclude: ['password'] } });
+
+  return { code: 200, object: fetchUsers };
+}; 
+
+const getUserById = async (id) => {
+  const fetchUser = await User.findByPk(id, { attributes: { exclude: ['password'] } });
+
+  if (fetchUser === null) return userError.type01;
+
+  return { code: 200, object: fetchUser };
 };
 
 const removeMe = async (token) => {
-  const { data: { id } } = jwtUtil.decoded(token);
-  await User.destroy({ where: { id } });
-  return { code: 204 };
+  const transaction = await sequelize.transaction();
+  try {
+    const { data: { id } } = jwtUtil.decoded(token);
+    await User.destroy({ where: { id } });
+    await transaction.commit();
+    return { code: 204 };    
+  } catch (error) {
+    await transaction.rollback();
+    return userError.type04;
+  }
 };
 
-module.exports = { validateBody, validateNewUSer, createUser, getAllUsers, getUserById, removeMe };
+module.exports = { createUser, getAllUsers, getUserById, removeMe };
