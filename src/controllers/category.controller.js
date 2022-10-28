@@ -1,21 +1,15 @@
-const categoryService = require('../services/category.service');
+const { categoryService } = require('../services');
 
-const register = async (req, res) => {  
-  const validateReqBody = categoryService.validateBody(req.body);
-
-  if (validateReqBody) {
- return res.status(validateReqBody.code).json({ message: validateReqBody.message });
-}
-
+const register = async (req, res) => {
   const newCategory = await categoryService.createCategory(req.body);
 
-  return res.status(201).json(newCategory);
+  return res.status(newCategory.code).json(newCategory.object || { message: newCategory.message });
 };
 
 const getAllCategories = async (_req, res) => {
   const fetchData = await categoryService.getAllCategories();
 
-  return res.status(200).json(fetchData);
+  return res.status(fetchData.code).json(fetchData.object);
 };
 
 module.exports = { register, getAllCategories };

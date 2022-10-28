@@ -1,8 +1,5 @@
 const express = require('express');
-const authRoute = require('./auth.routes');
-const userRoute = require('./user.routes');
-const categoryRoute = require('./category.routes');
-const postRoute = require('./post.routes');
+const { authRoute, userRoute, categoryRoute, postRoute } = require('./index.routes');
 
 const routers = express.Router();
 

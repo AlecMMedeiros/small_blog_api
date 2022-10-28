@@ -1,4 +1,4 @@
-const postService = require('../services/post.service');
+const { postService } = require('../services');
 
 const register = async (req, res) => {
   const { authorization } = req.headers;

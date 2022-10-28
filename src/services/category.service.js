@@ -1,30 +1,30 @@
-const Joi = require('joi');
+const { Category, sequelize } = require('../models');
+const { categoryError } = require('../utils/errorMap.utils');
 
-const { Category } = require('../models');
+const getAllCategories = async () => {
+  const fetchCategories = await Category.findAll();
 
-const getAllCategories = async () => Category.findAll();
-
-const createCategory = async (params) => { 
-  const { name } = params;
-  await Category.create({ name });
-  const [newCategory] = await Category.findAll({
-    where: { name },    
-  });
-  return newCategory;
+  return { code: 200, object: fetchCategories };
 };
 
-const validateBody = (params) => {
-  const schema = Joi.object({
-    name: Joi.string().required().messages({
-      'any.required': '"name" is required',
-    }),
-  });
+const createCategory = async (payload) => {
+  const { name } = payload;
 
-  const { error } = schema.validate(params);
+  const transaction = await sequelize.transaction();
+  
+  try {
+    await Category.create({ name });
+    const [newCategory] = await Category.findAll({
+      where: { name },    
+    });
+    await transaction.commit();
 
-  if (error) return { code: 400, message: error.details[0].message };
+    return { code: 201, object: newCategory };    
+  } catch (error) {
+    await transaction.rollback();
 
-  return null;
+    return categoryError.type03;
+  }
 };
 
-module.exports = { validateBody, createCategory, getAllCategories };
+module.exports = { createCategory, getAllCategories };

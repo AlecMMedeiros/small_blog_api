@@ -2,6 +2,17 @@ const Joi = require('joi');
 
 const errorMessage = 'Some required fields are missing';
 
+const loginSchema = Joi.object({
+  email: Joi.string().email().required().messages({
+    'any.required': errorMessage,
+    'string.empty': errorMessage,
+  }),
+  password: Joi.string().required().messages({
+    'any.required': errorMessage,
+    'string.empty': errorMessage,   
+  }),
+});
+
 const newPostSchema = Joi.object({
   title: Joi.string().required().messages({
     'any.required': errorMessage,
@@ -39,8 +50,16 @@ const userSchema = Joi.object({
   image: Joi.string(),
 });
 
+const categotySchema = Joi.object({
+  name: Joi.string().required().messages({
+    'any.required': '"name" is required',
+  }),
+});
+
 module.exports = {
+  loginSchema,
   newPostSchema,
   updatePostSchema,
   userSchema,
+  categotySchema,
 };

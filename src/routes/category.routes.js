@@ -1,10 +1,16 @@
 const express = require('express');
 const { categoryController } = require('../controllers');
-const { validateAccess } = require('../middlewares/auth.middleware');
+const { authMiddleware, reqBodyMiddleware } = require('../middlewares');
 
 const router = express.Router();
 
-router.get('/', validateAccess, categoryController.getAllCategories);
-router.post('/', validateAccess, categoryController.register);
+router.get('/',
+  authMiddleware.validateAccess,
+  categoryController.getAllCategories);
+
+router.post('/',
+  authMiddleware.validateAccess,
+  reqBodyMiddleware.categoryBody,
+  categoryController.register);
 
 module.exports = router;
