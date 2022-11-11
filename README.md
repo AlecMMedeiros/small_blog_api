@@ -1,10 +1,19 @@
-# :construction: README em construção ! :construction:
-<!-- Olá, Tryber!
-Esse é apenas um arquivo inicial para o README do seu projeto.
-É essencial que você preencha esse documento por conta própria, ok?
-Não deixe de usar nossas dicas de escrita de README de projetos, e deixe sua criatividade brilhar!
-:warning: IMPORTANTE: você precisa deixar nítido:
-- quais arquivos/pastas foram desenvolvidos por você; 
-- quais arquivos/pastas foram desenvolvidos por outra pessoa estudante;
-- quais arquivos/pastas foram desenvolvidos pela Trybe.
--->
+# Overview #
+
+This is a small project developed during my time as a full stack developer student.
+
+Project creates an API for dropshipping sales management in which you can create, view, delete and update products and sales. 
+
+Features in this app:
+
+* MSC (model-service-controller) architecture
+* Sequelize
+* JSON Web Token
+* NodeJS
+* MySQL
+* ExpressJS
+* JavaScript
+
+# Special thanks #
+
+Special thanks to all the Tryber staff for their support in my journey toward my career as a Full Stack developer.
